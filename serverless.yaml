@@ -1,0 +1,56 @@
+service: aws-cost-usage
+app: aws-cost-explorer
+tenant: ankurpshah
+
+provider:
+  name: aws
+  runtime: python3.6
+  timeout: 120
+  versionFunctions: false
+  stage: prod
+  region: us-east-1
+  role: arn:aws:iam::xxxxxxxxxxxx:role/role-name
+
+package:
+  include:
+    - handler.py
+    - group_dictionary.py
+
+  exclude:
+    - requirements.txt
+    - serverless.yaml
+
+functions:
+  aws-cost-usage:
+    handler: handler.main
+    environment:
+      slack_user_name: "AWS Cost report:"
+      slack_web_hook: "https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/xxxxxxxxxxxxxxxxxxxxxxx"
+      token: "xxxxxxxxxxxxxxxx"
+      slack_default_channel: "#general"
+      tag_name: "business_unit"
+
+    tags:
+      Name: "aws-cost-usage"
+      Group: "Infrastructure"
+      Creator: "ankurpshah@gmail.com"
+      Owner: "Ankur shah"
+      Purpose: "AWS Cost using slack command"
+      Function: "Utility"
+      Environment: "production"
+      Criticality: "Low"
+
+    events:
+      - schedule: cron(0 8 1,15 * ? *)
+      - http:
+          path: /report
+          method: post
+
+plugins:
+  - serverless-python-requirements
+  - serverless-prune-plugin
+
+custom:
+  prune:
+    automatic: true
+    number: 1
